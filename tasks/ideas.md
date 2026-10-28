@@ -16,3 +16,10 @@ Status: proposed, needs an Anthropic API key as a repository secret.
 The pipeline already knows when a flight date or status changes, so it could write `feed.xml` and let people subscribe in any feed reader or get pushed to Slack or Discord.
 Effort: small.
 Status: proposed.
+
+## 2026-10-27 - Photo story component on scroll-driven animations
+The story chapters here (pinned photo, crossfade at each chapter, words that fade in and out with scroll) could be a small web component that turns any list of dated photos into a scroll story, for launch trackers, team histories or product changelogs.
+The fades use CSS scroll-driven animations (`animation-timeline: view()`), now in Chrome and Safari, so they need no scroll listener.
+Effort: small (extract `src/ui/story.ts` and its CSS, take the chapters as JSON).
+Links: https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline/view
+Status: proposed.
