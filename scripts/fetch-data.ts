@@ -23,9 +23,10 @@ const OUTPUT = join(ROOT, 'public/data/starship.json');
 const CURATED = join(ROOT, 'data/curated/flights.json');
 const FIXTURES = join(ROOT, 'tests/fixtures');
 
-const TIMEOUT_MS = 20_000;
+// LL2's detailed launch list can take over 20 s to build when its cache is cold.
+const TIMEOUT_MS = 60_000;
 const ATTEMPTS = 3;
-const USER_AGENT = 'starship-flight-log/1.0 (+https://github.com; static site build)';
+const USER_AGENT = 'starship-flight-log/1.0 (+https://github.com/serenearyal/starship-timeline)';
 
 class HttpError extends Error {
   status: number;
@@ -56,6 +57,7 @@ async function fetchJson(url: string, attempts = ATTEMPTS): Promise<unknown> {
       lastError = error;
       const retryable = !(error instanceof HttpError) || error.status >= 500;
       if (!retryable || i === attempts) break;
+      console.warn(`retry ${i}/${attempts - 1} for ${url}: ${error instanceof Error ? error.message : String(error)}`);
       await sleep(2000 * 2 ** (i - 1));
     }
   }
