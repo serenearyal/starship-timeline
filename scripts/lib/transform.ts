@@ -341,6 +341,8 @@ export function launchToFlight(launch: LL2Launch): Flight {
     webcasts: urlsToLinks(launch.vid_urls),
     links: dedupeLinks(links),
     image: nonEmpty(launch.image?.image_url),
+    // Filled in by scripts/lib/images.ts, which downloads and resizes `image`.
+    photo: null,
     probability: typeof launch.probability === 'number' ? launch.probability : null,
   };
 }
@@ -411,6 +413,75 @@ export function buildManifest(launches: LL2Launch[]): ManifestLaunch[] {
 export function findNextFlightId(flights: Flight[]): string | null {
   const upcoming = flights.filter((f) => f.upcoming).sort((a, b) => byNet(a, b) || a.number - b.number);
   return upcoming[0]?.id ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Photo sources (scripts/lib/images.ts downloads and resizes them)
+
+/** An LL2 image with its credit. `license` is null when LL2 says "Unknown". */
+export interface PhotoSource {
+  url: string;
+  credit: string | null;
+  license: string | null;
+}
+
+/** The launch's LL2 image, or null when it has none. */
+export function imageSource(launch: LL2Launch): PhotoSource | null {
+  const url = launch.image?.image_url;
+  if (!isHttpUrl(url)) return null;
+  const license = nonEmpty(launch.image?.license?.name);
+  return {
+    url,
+    credit: nonEmpty(launch.image?.credit),
+    license: license && !/^unknown$/i.test(license) ? license : null,
+  };
+}
+
+/**
+ * Credit and licence per image URL, so flights keep them after merging and fallback.
+ * Several launches can share one URL; an entry with a known licence wins.
+ */
+export function buildImageCredits(launches: LL2Launch[]): Map<string, PhotoSource> {
+  const credits = new Map<string, PhotoSource>();
+  for (const launch of launches) {
+    const source = imageSource(launch);
+    if (!source) continue;
+    const existing = credits.get(source.url);
+    if (!existing || (!existing.license && source.license)) credits.set(source.url, source);
+  }
+  return credits;
+}
+
+/**
+ * Prototype key from an LL2 launch name, or null.
+ * "Starship Hopper | 150m Hop" -> "starhopper", "Starship SN8 | 12.5 km Flight" -> "sn8".
+ */
+export function prototypeKey(name: string): string | null {
+  const vehicle = (name.includes('|') ? name.slice(0, name.indexOf('|')) : name).trim();
+  if (/^Star(?:ship\s*)?hopper$/i.test(vehicle)) return 'starhopper';
+  const sn = /^Starship\s+(SN\d+)$/i.exec(vehicle);
+  return sn ? sn[1]!.toLowerCase() : null;
+}
+
+/**
+ * Photo source per prototype key. When a vehicle has several launches (Starhopper hopped twice),
+ * the image with a known licence wins, then the latest launch.
+ */
+export function buildPrototypeSources(launches: LL2Launch[]): Record<string, PhotoSource> {
+  const best = new Map<string, { source: PhotoSource; net: number }>();
+  for (const launch of launches) {
+    if (isIntegratedFlight(launch)) continue;
+    const key = prototypeKey(launch.name);
+    const source = imageSource(launch);
+    if (!key || !source) continue;
+    const net = Date.parse(launch.net);
+    const current = best.get(key);
+    const better =
+      !current ||
+      (!!source.license !== !!current.source.license ? !!source.license : net > current.net);
+    if (better) best.set(key, { source, net });
+  }
+  return Object.fromEntries([...best.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, v.source]));
 }
 
 // ---------------------------------------------------------------------------

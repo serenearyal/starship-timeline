@@ -15,10 +15,13 @@ import {
   buildNews,
   buildNotices,
   buildRoadClosures,
+  buildImageCredits,
+  buildPrototypeSources,
   buildStats,
   finaliseFlights,
   findNextFlightId,
 } from './transform.ts';
+import type { PhotoSource } from './transform.ts';
 
 export const LL2_DASHBOARD_URL = 'https://ll.thespacedevs.com/2.3.0/dashboard/starship/';
 // Newest first, so a growing manifest never pushes the latest flights off the page.
@@ -41,6 +44,15 @@ export interface PipelineResult {
   data: SiteData;
   /** One line per source, plus warnings. */
   log: string[];
+  /** Image credits and prototype photo sources for scripts/lib/images.ts. */
+  photoSources: PhotoSources;
+}
+
+export interface PhotoSources {
+  /** Credit and licence per LL2 image URL, from this run's launch list (empty when it failed). */
+  credits: Map<string, PhotoSource>;
+  /** Prototype photo sources by key ("starhopper", "sn8", ...) from this run's launch list. */
+  prototypes: Record<string, PhotoSource>;
 }
 
 type Outcome<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -114,10 +126,13 @@ export async function buildSiteData(input: PipelineInput): Promise<PipelineResul
   // --- Launch Library 2: flights and manifest from the launch list, the rest from the dashboard.
   let flights: Flight[];
   let manifest: ManifestLaunch[];
+  const photoSources: PhotoSources = { credits: new Map(), prototypes: {} };
   const ll2Errors: string[] = [];
   if (launches.ok) {
     const { results, count } = launches.value;
     flights = buildFlights(results);
+    photoSources.credits = buildImageCredits(results);
+    photoSources.prototypes = buildPrototypeSources(results);
     manifest = buildManifest(results);
     // Past the first page, older launches are carried over from the previous data.
     if (typeof count === 'number' && count > results.length) {
@@ -225,7 +240,9 @@ export async function buildSiteData(input: PipelineInput): Promise<PipelineResul
     fleet,
     news: articles,
     stats: buildStats(flights),
+    // Filled in by scripts/lib/images.ts.
+    prototypePhotos: {},
   };
   validateSiteData(data);
-  return { data, log };
+  return { data, log, photoSources };
 }

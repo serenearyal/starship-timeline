@@ -96,8 +96,30 @@ export interface Flight {
   webcastLive: boolean;
   webcasts: Link[];
   links: Link[];
+  /** Original LL2 image URL. The UI shows `photo`, which the pipeline builds from it. */
   image: string | null;
+  /** The flight's photo, resized and served from this site; null when LL2 has no image or it failed. */
+  photo: Photo | null;
   probability: number | null;
+}
+
+/** A photo resized by the pipeline and served from this site. Paths are relative to the site root. */
+export interface Photo {
+  /** 2400 px wide WebP, for large screens. */
+  large: string;
+  /** 1200 px wide WebP, for phones and cards. */
+  small: string;
+  /** 1600 px wide JPEG, for browsers without WebP. */
+  jpeg: string;
+  /** Size of `large` in pixels (the aspect ratio holds for all three). */
+  width: number;
+  height: number;
+  /** Tiny blurred JPEG as a data URI, shown while the photo loads. */
+  placeholder: string;
+  /** Photographer or owner from LL2, e.g. "SpaceX". */
+  credit: string | null;
+  /** Licence name from LL2, e.g. "CC BY-NC 2.0". */
+  license: string | null;
 }
 
 /** Any other Starship launch on the LL2 manifest (prototype hops, future commercial or NASA missions). */
@@ -212,4 +234,9 @@ export interface SiteData {
   fleet: FleetVehicle[];
   news: Article[];
   stats: Stats;
+  /**
+   * Photos of the prototype tests before the integrated flights, keyed by vehicle:
+   * "starhopper", "sn5", "sn6", "sn8", "sn9", "sn10", "sn11", "sn15". Missing keys mean no photo.
+   */
+  prototypePhotos: Record<string, Photo>;
 }

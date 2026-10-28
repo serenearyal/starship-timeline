@@ -33,11 +33,37 @@ jobs:
 
       - run: npm test
 
+      # Downloaded and resized flight photos. Cache entries are immutable, so the key names the photo set:
+      # "images-none" never matches and the restore key picks the newest saved set.
+      - name: Restore photo cache
+        id: image-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: .image-cache
+          key: images-none
+          restore-keys: images-
+
       - name: Fetch data
         run: npm run fetch-data
         env:
           # The live site's own data. When an API fails, the script keeps that part of the last good run.
           PREVIOUS_DATA_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/data/starship.json
+
+      # Save only when the photo set changed, so the 30-minute runs do not fill the cache with copies.
+      # No index.json (the photo step failed) means no key and no save.
+      - name: Photo cache key
+        id: image-key
+        run: |
+          if [ -f .image-cache/index.json ]; then
+            echo "key=images-$(sha256sum .image-cache/index.json | cut -c1-16)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save photo cache
+        if: steps.image-key.outputs.key != '' && steps.image-key.outputs.key != steps.image-cache.outputs.cache-matched-key
+        uses: actions/cache/save@v6
+        with:
+          path: .image-cache
+          key: ${{ steps.image-key.outputs.key }}
 
       - run: npm run build
 

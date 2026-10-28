@@ -42,7 +42,7 @@ export interface LL2Launch {
   window_start?: string | null;
   window_end?: string | null;
   status?: LL2Named | null;
-  image?: { image_url?: string | null } | null;
+  image?: { image_url?: string | null; credit?: string | null; license?: { name?: string | null } | null } | null;
   probability?: number | null;
   webcast_live?: boolean | null;
   rocket?: {
