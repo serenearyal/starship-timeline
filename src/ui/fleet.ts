@@ -85,11 +85,12 @@ export function renderFleet(el: HTMLElement, data: SiteData): void {
 
   const tilesByGroup: Record<string, Tile[]> = { b: boosters, s: ships, p: protoTiles };
   el.innerHTML =
+    `<h3 class="headline headline--s">The fleet</h3>` +
     groupHtml('Super Heavy boosters', 'b', boosters, `${flown(boosters)} flown`) +
     groupHtml('Starships', 's', ships, `${flown(ships)} flown`) +
     `<details class="fleet__protos">
-      <summary class="button button--ghost">Show ${protoTiles.length} prototypes and test articles</summary>
-      <div style="margin-top:20px">${groupHtml('Prototypes', 'p', protoTiles, 'Starhopper to SN16, 2019 to 2021')}</div>
+      <summary class="btn btn--small">Show ${protoTiles.length} prototypes and test articles</summary>
+      ${groupHtml('Prototypes', 'p', protoTiles, 'Starhopper to SN16, 2019 to 2021')}
     </details>`;
 
   el.addEventListener('click', (e) => {

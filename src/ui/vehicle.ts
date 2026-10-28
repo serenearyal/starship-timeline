@@ -172,65 +172,75 @@ function fmt(n: number): string {
   return n.toLocaleString('en-US');
 }
 
-function delta(curr: number, prev: number | undefined, unit: string): string {
+function deltaHtml(curr: number, prev: number | undefined, unit: string): string {
   if (prev === undefined || curr === prev) return '';
-  const d = curr - prev;
+  const d = Number((curr - prev).toFixed(1));
   const text = Number.isInteger(d) ? fmt(Math.abs(d)) : Math.abs(d).toFixed(1);
-  return `<span class="stat__delta">${d > 0 ? '+' : '−'}${text}${unit ? ` ${unit}` : ''}</span>`;
+  return `<span class="spec__delta">${d > 0 ? '+' : '−'}${text} ${esc(unit)}</span>`;
 }
 
-function statHtml(label: string, value: string, unit: string, deltaHtml = ''): string {
-  return `<div class="stat"><div class="stat__label">${esc(label)}</div><div class="stat__value">${value}<span class="stat__unit">${esc(unit)}</span>${deltaHtml}</div></div>`;
+function rowHtml(label: string, value: string, unit: string, delta = ''): string {
+  return `<div class="spec__row"><dt>${esc(label)}</dt><dd><span class="spec__value">${value}</span><span class="spec__unit">${esc(unit)}</span>${delta}</dd></div>`;
 }
 
 function specHtml(v: StackVersion): string {
   const i = STACKS.indexOf(v);
   const prev = i > 0 ? STACKS[i - 1] : undefined;
-  const height = v.shipHeight + v.boosterHeight;
-  const prevHeight = prev ? prev.shipHeight + prev.boosterHeight : undefined;
+  const height = Number((v.shipHeight + v.boosterHeight).toFixed(1));
+  const prevHeight = prev ? Number((prev.shipHeight + prev.boosterHeight).toFixed(1)) : undefined;
   const prop = v.shipPropellant + v.boosterPropellant;
   const prevProp = prev ? prev.shipPropellant + prev.boosterPropellant : undefined;
   return `
     <p class="spec__name">${esc(v.name)}</p>
-    <p class="spec__flown">${esc(v.flown)}</p>
-    <div class="spec__grid">
-      ${statHtml('Stack height', height.toFixed(1), 'm', delta(Number(height.toFixed(1)), prevHeight !== undefined ? Number(prevHeight.toFixed(1)) : undefined, 'm'))}
-      ${statHtml('Liftoff thrust', fmt(v.liftoffThrust), 'tf', delta(v.liftoffThrust, prev?.liftoffThrust, 'tf'))}
-      ${statHtml('Propellant', fmt(prop), 't', delta(prop, prevProp, 't'))}
-      ${statHtml('Payload to orbit', esc(v.payload), 'reusable')}
-      ${statHtml('Ship', `${v.shipHeight}`, 'm', '')}
-      ${statHtml('Booster', `${v.boosterHeight}`, 'm', '')}
-    </div>
-    <p class="spec__changes-title">What changed</p>
-    <ul class="firsts">${v.changes.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
-    <p class="spec__changes-title" style="margin-top:18px">Engines</p>
-    <p class="empty">Booster: ${esc(v.boosterEngines)}. Ship: ${esc(v.shipEngines)}.</p>`;
+    <p class="spec__flown">${esc(v.flown)}${prev ? `. Changes against ${esc(prev.id)}.` : ''}</p>
+    <dl class="spec__table">
+      ${rowHtml('Height', fmt(height), 'm', deltaHtml(height, prevHeight, 'm'))}
+      ${rowHtml('Liftoff thrust', fmt(v.liftoffThrust), 'tf', deltaHtml(v.liftoffThrust, prev?.liftoffThrust, 'tf'))}
+      ${rowHtml('Propellant', fmt(prop), 't', deltaHtml(prop, prevProp, 't'))}
+      ${rowHtml('Payload to orbit', esc(v.payload.replace(/^About /, '')), 'reusable')}
+      ${rowHtml('Super Heavy', String(v.boosterHeight), 'm', `<span class="spec__note">${esc(v.boosterEngines)}</span>`)}
+      ${rowHtml('Ship', String(v.shipHeight), 'm', `<span class="spec__note">${esc(v.shipEngines)}</span>`)}
+    </dl>
+    <h3 class="spec__sub">What changed</h3>
+    <ul class="ticks">${v.changes.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>`;
 }
 
 export function renderVehicle(el: HTMLElement, enginesEl: HTMLElement): void {
   let active = 'V3';
   el.innerHTML = `
-    <div class="stacks glass">
-      <div data-svg>${svgHtml(active)}</div>
-      <div class="stacks__tabs" role="tablist" aria-label="Starship version">
-        ${STACKS.map((v) => `<button class="tab" role="tab" id="tab-${v.id}" aria-controls="spec" aria-selected="${v.id === active}" data-version="${v.id}">${v.id}</button>`).join('')}
+    <header class="section-head">
+      <h2 class="headline" id="vehicle-title">The vehicle</h2>
+      <p class="lede">Super Heavy and Starship, stacked: the largest and most powerful rocket ever built, made to be caught, refuelled and flown again.</p>
+    </header>
+    <div class="vehicle__grid">
+      <div class="stacks">
+        <div class="stacks__art" data-svg>${svgHtml(active)}</div>
+        <div class="tabs" role="tablist" aria-label="Starship version">
+          ${STACKS.map((v) => `<button class="tab" role="tab" id="tab-${v.id}" aria-controls="spec" aria-selected="${v.id === active}" tabindex="${v.id === active ? 0 : -1}" data-version="${v.id}">${v.id}</button>`).join('')}
+        </div>
       </div>
-    </div>
-    <div class="spec glass" id="spec" role="tabpanel" aria-live="polite">${specHtml(STACKS.find((s) => s.id === active)!)}</div>`;
+      <div class="spec" id="spec" role="tabpanel" aria-labelledby="tab-${active}" aria-live="polite">${specHtml(STACKS.find((s) => s.id === active)!)}</div>
+    </div>`;
 
   const select = (id: string) => {
-    active = id;
     const v = STACKS.find((s) => s.id === id);
     if (!v) return;
+    active = id;
     el.querySelectorAll<SVGGElement>('.stack').forEach((g) => g.classList.toggle('is-active', g.dataset.version === id));
-    el.querySelectorAll<HTMLButtonElement>('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.version === id)));
-    el.querySelector('#spec')!.innerHTML = specHtml(v);
+    el.querySelectorAll<HTMLButtonElement>('.tab').forEach((b) => {
+      const on = b.dataset.version === id;
+      b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    const spec = el.querySelector<HTMLElement>('#spec')!;
+    spec.setAttribute('aria-labelledby', `tab-${id}`);
+    spec.innerHTML = specHtml(v);
   };
   el.addEventListener('click', (e) => {
     const target = (e.target as Element).closest<HTMLElement | SVGElement>('[data-version]');
     if (target?.dataset.version) select(target.dataset.version);
   });
-  el.querySelector('.stacks__tabs')!.addEventListener('keydown', (e) => {
+  el.querySelector('.tabs')!.addEventListener('keydown', (e) => {
     const key = (e as KeyboardEvent).key;
     if (key !== 'ArrowRight' && key !== 'ArrowLeft') return;
     const i = STACKS.findIndex((s) => s.id === active);
@@ -240,14 +250,18 @@ export function renderVehicle(el: HTMLElement, enginesEl: HTMLElement): void {
   });
 
   const max = Math.max(...ENGINES.map((e) => e.thrust));
-  enginesEl.classList.add('glass');
-  enginesEl.innerHTML =
-    ENGINES.map(
-      (e) => `<div class="engine">
-        <p class="engine__name">${esc(e.id)}</p>
-        <div class="engine__bar" aria-hidden="true"><span style="width:${((e.thrust / max) * 100).toFixed(1)}%"></span></div>
-        <p class="engine__nums"><span><b>${e.thrust}</b> tf thrust</span><span><b>${fmt(e.mass)}</b> kg</span><span><b>${e.isp}</b> s Isp</span></p>
-        <p class="engine__change">${esc(e.change)}</p>
-      </div>`,
-    ).join('') + `<p class="engines__note">${esc(ENGINE_SOURCE)}</p>`;
+  enginesEl.innerHTML = `
+    <h3 class="headline headline--s">Raptor</h3>
+    <div class="engines__grid">
+      ${ENGINES.map(
+        (e) => `<div class="engine">
+          <p class="engine__name">${esc(e.id)}</p>
+          <p class="engine__thrust"><span class="spec__value">${e.thrust}</span><span class="spec__unit">tf thrust</span></p>
+          <div class="engine__bar" aria-hidden="true"><span style="width:${((e.thrust / max) * 100).toFixed(1)}%"></span></div>
+          <p class="engine__nums">${fmt(e.mass)} kg, ${e.isp} s specific impulse</p>
+          <p class="engine__change">${esc(e.change)}</p>
+        </div>`,
+      ).join('')}
+    </div>
+    <p class="note">${esc(ENGINE_SOURCE)}</p>`;
 }

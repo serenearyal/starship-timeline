@@ -1,7 +1,10 @@
 import type { SiteData } from '../data/types.ts';
-import { esc, fmtDate, netText, relTime, safeUrl } from './format.ts';
+import { esc, fmtDate, netText, safeUrl } from './format.ts';
+import { creditText, ownPhotos, pictureHtml } from './photo.ts';
 
 const STARBASE = { lat: 25.9971, lon: -97.1554, tz: 'America/Chicago' };
+/** Flight 12's photo looks down on the launch site, the bay and the coast. */
+const BACKDROP_FLIGHT = 12;
 
 // WMO weather interpretation codes used by Open-Meteo.
 const WEATHER: Record<number, string> = {
@@ -49,7 +52,7 @@ function hostName(url: string): string {
 }
 
 function statHtml(label: string, value: string): string {
-  return `<div class="stat"><div class="stat__label">${esc(label)}</div><div class="stat__value" style="font-size:19px">${value}</div></div>`;
+  return `<div><dt>${esc(label)}</dt><dd>${value}</dd></div>`;
 }
 
 function localClock(): string {
@@ -72,16 +75,14 @@ async function loadWeather(panel: HTMLElement): Promise<void> {
     const f = Math.round((w.temperature_2m * 9) / 5 + 32);
     const dir = COMPASS[Math.round(w.wind_direction_10m / 45) % 8];
     body.innerHTML = `
-      <div class="weather__now">
-        <span class="weather__temp">${Math.round(w.temperature_2m)}<span class="weather__unit">°C</span></span>
-        <span class="weather__desc">${esc(WEATHER[w.weather_code] ?? 'Conditions unavailable')}<br>${f}°F, feels like ${Math.round(w.apparent_temperature)}°C</span>
-      </div>
-      <div class="weather__grid">
-        ${statHtml('Wind', `${Math.round(w.wind_speed_10m)}<span class="stat__unit">kn ${dir}</span>`)}
-        ${statHtml('Gusts', `${Math.round(w.wind_gusts_10m)}<span class="stat__unit">kn</span>`)}
-        ${statHtml('Cloud cover', `${Math.round(w.cloud_cover)}<span class="stat__unit">%</span>`)}
-        ${statHtml('Humidity', `${Math.round(w.relative_humidity_2m)}<span class="stat__unit">%</span>`)}
-      </div>`;
+      <p class="weather__temp">${Math.round(w.temperature_2m)}<span class="weather__unit">°C</span></p>
+      <p class="weather__desc">${esc(WEATHER[w.weather_code] ?? 'Conditions unavailable')}, ${f}°F<br>Feels like ${Math.round(w.apparent_temperature)}°C</p>
+      <dl class="weather__grid">
+        ${statHtml('Wind', `${Math.round(w.wind_speed_10m)}<span class="unit">kn ${dir}</span>`)}
+        ${statHtml('Gusts', `${Math.round(w.wind_gusts_10m)}<span class="unit">kn</span>`)}
+        ${statHtml('Cloud', `${Math.round(w.cloud_cover)}<span class="unit">%</span>`)}
+        ${statHtml('Humidity', `${Math.round(w.relative_humidity_2m)}<span class="unit">%</span>`)}
+      </dl>`;
   } catch {
     body.innerHTML = `<p class="empty">Live weather is not available right now. It loads from Open-Meteo each time you open the page.</p>`;
   }
@@ -92,77 +93,82 @@ export function renderStarbase(el: HTMLElement, data: SiteData): void {
   const upcoming = data.events.upcoming.filter((e) => Date.parse(e.date) > now - 6 * 3600e3);
   const recent = data.events.recent.slice(0, 4);
   const closures = data.roadClosures.filter((c) => Date.parse(c.end) > now);
+  const backdrop = ownPhotos(data).get(BACKDROP_FLIGHT);
 
   const eventItem = (e: (typeof recent)[number]) => {
     const url = safeUrl(e.url);
     const name = esc(e.name.replace(/^SpaceX /, ''));
-    return `<li><span class="list-plain__time">${esc(e.datePrecision === 'minute' || e.datePrecision === 'hour' || e.datePrecision === 'second' ? fmtDate(e.date) : netText(e.date, e.datePrecision))}</span>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>` : name}</li>`;
+    const precise = e.datePrecision === 'minute' || e.datePrecision === 'hour' || e.datePrecision === 'second';
+    return `<li><span class="list__time">${esc(precise ? fmtDate(e.date) : netText(e.date, e.datePrecision))}</span>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${name}</a>` : name}</li>`;
   };
 
-  const activity = `
-    <div class="panel glass">
-      <p class="panel__title"><span>Tests and events</span></p>
+  const events = `
+    <section class="board">
+      <h3 class="board__title">Tests and events</h3>
       ${
         upcoming.length
-          ? `<ul class="list-plain">${upcoming.slice(0, 4).map(eventItem).join('')}</ul>`
-          : `<p class="empty">No tests announced yet. Static fires and rollouts appear here as soon as they are scheduled.</p>`
+          ? `<ul class="list">${upcoming.slice(0, 4).map(eventItem).join('')}</ul>`
+          : `<p class="empty">No tests announced yet. Static fires and rollouts show here as soon as they are scheduled.</p>`
       }
-      ${recent.length ? `<p class="panel__title" style="margin-top:22px"><span>Recently</span></p><ul class="list-plain">${recent.map(eventItem).join('')}</ul>` : ''}
-    </div>`;
+      ${recent.length ? `<h4 class="board__sub">Recently</h4><ul class="list">${recent.map(eventItem).join('')}</ul>` : ''}
+    </section>`;
 
   const roads = `
-    <div class="panel glass">
-      <p class="panel__title"><span>Highway 4 closures</span></p>
+    <section class="board">
+      <h3 class="board__title">Highway 4 closures</h3>
       ${
         closures.length
-          ? `<ul class="list-plain">${closures
+          ? `<ul class="list">${closures
               .map(
                 (c) =>
-                  `<li><span class="list-plain__time">${esc(fmtDate(c.start))}, ${esc(new Date(c.start).toISOString().slice(11, 16))} to ${esc(new Date(c.end).toISOString().slice(11, 16))} UTC</span>${esc(c.title)} <span class="chip" style="margin-left:6px">${esc(c.status)}</span></li>`,
+                  `<li><span class="list__time">${esc(fmtDate(c.start))}, ${esc(new Date(c.start).toISOString().slice(11, 16))} to ${esc(new Date(c.end).toISOString().slice(11, 16))} UTC</span>${esc(c.title)}, ${esc(c.status.toLowerCase())}</li>`,
               )
               .join('')}</ul>`
-          : `<p class="empty">No road closures are posted right now. Closures for tests and launches usually appear a few days ahead.</p>`
+          : `<p class="empty">No road closures are posted. Closures for tests and launches usually show a few days ahead.</p>`
       }
       ${
         data.notices.length
-          ? `<p class="panel__title" style="margin-top:22px"><span>Notices</span></p><ul class="list-plain">${data.notices
+          ? `<h4 class="board__sub">Notices</h4><ul class="list">${data.notices
               .slice(0, 4)
               .map((n) => {
                 const url = safeUrl(n.url);
-                return `<li>${n.date ? `<span class="list-plain__time">${esc(fmtDate(n.date))}</span>` : ''}${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(n.name)}</a>` : esc(n.name)}</li>`;
+                return `<li>${n.date ? `<span class="list__time">${esc(fmtDate(n.date))}</span>` : ''}${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(n.name)}</a>` : esc(n.name)}</li>`;
               })
               .join('')}</ul>`
           : ''
       }
+    </section>`;
+
+  const camLinks = data.liveStreams
+    .slice(0, 3)
+    .map((s) => {
+      const url = safeUrl(s.url);
+      if (!url) return '';
+      return `<li><a class="cam" href="${esc(url)}" target="_blank" rel="noopener"><span class="cam__title">${esc(camName(s.title))}</span><span class="cam__via">${esc(hostName(url))}</span></a></li>`;
+    })
+    .join('');
+  const cams = `
+    <section class="board">
+      <h3 class="board__title"><span class="pulse pulse--live" aria-hidden="true"></span>Live cameras</h3>
+      ${camLinks ? `<ul class="list list--cams">${camLinks}</ul>` : `<p class="empty">No live camera streams are listed right now.</p>`}
+    </section>`;
+
+  el.innerHTML = `
+    <div class="starbase__media" aria-hidden="true">${backdrop ? pictureHtml(backdrop, { alt: '' }) : ''}</div>
+    ${backdrop ? `<p class="credit starbase__credit">Flight ${BACKDROP_FLIGHT}. ${esc(creditText(backdrop))}</p>` : ''}
+    <div class="starbase__inner">
+      <header class="section-head">
+        <p class="eyebrow"><span>Starbase, Texas. Local time <b data-clock>${esc(localClock())}</b></span></p>
+        <h2 class="headline" id="starbase-title">Starbase</h2>
+        <p class="lede">Where Starship is built, tested and launched, on the beach at the southern tip of Texas.</p>
+      </header>
+      <div class="weather" data-weather-panel>
+        <h3 class="board__title">Weather at the pad</h3>
+        <div data-weather><p class="empty">Loading live weather</p></div>
+      </div>
+      <div class="starbase__boards">${events}${roads}${cams}</div>
     </div>`;
-
-  const weather = `
-    <div class="panel glass" data-weather-panel>
-      <p class="panel__title"><span>Weather at the pad</span><span data-clock>${esc(localClock())}</span></p>
-      <div data-weather><p class="empty">Loading live weather</p></div>
-    </div>`;
-
-  const cams = data.liveStreams.length
-    ? `<div class="cams">${data.liveStreams
-        .slice(0, 3)
-        .map((s) => {
-          const url = safeUrl(s.url);
-          if (!url) return '';
-          return `<a class="cam glass" href="${esc(url)}" target="_blank" rel="noopener">
-            <span class="cam__live">Live camera</span>
-            <span class="cam__title">${esc(camName(s.title))}</span>
-            <span class="cam__via">Watch on ${esc(hostName(url))}</span>
-          </a>`;
-        })
-        .join('')}</div>`
-    : '';
-
-  el.innerHTML = weather + activity + roads + cams;
   void loadWeather(el.querySelector('[data-weather-panel]')!);
   const clock = el.querySelector<HTMLElement>('[data-clock]')!;
   window.setInterval(() => (clock.textContent = localClock()), 30_000);
-}
-
-export function lastSyncText(data: SiteData): string {
-  return `Synced ${relTime(data.generatedAt)}`;
 }

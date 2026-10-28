@@ -1,12 +1,14 @@
 import './styles/main.css';
 import type { SiteData } from './data/types.ts';
-import { openFlight, renderFlights } from './ui/flights.ts';
+import type { HeroScene } from './scene/index.ts';
+import { openFlight, renderFlights, setupSheet, setupStrip } from './ui/flights.ts';
 import { relTime } from './ui/format.ts';
 import { renderFleet } from './ui/fleet.ts';
-import { renderHero, renderLatest, startCountdown } from './ui/hero.ts';
-import { renderMilestones } from './ui/milestones.ts';
+import { renderFuture } from './ui/future.ts';
+import { countUp, renderHero, startCountdown } from './ui/hero.ts';
 import { renderFooter, renderNews } from './ui/news.ts';
 import { renderStarbase } from './ui/starbase.ts';
+import { renderStory, type StoryHandle } from './ui/story.ts';
 import { renderVehicle } from './ui/vehicle.ts';
 
 const DATA_URL = 'data/starship.json';
@@ -25,12 +27,13 @@ async function loadData(): Promise<SiteData> {
 
 let stopCountdown = () => {};
 
+/** Everything that changes when the data changes. */
 function renderDynamic(data: SiteData): void {
   stopCountdown();
   renderHero($('hero'), data);
-  renderLatest($('latest'), data);
   stopCountdown = startCountdown($('hero'), data);
-  renderFlights($('flight-list'), data);
+  renderFuture($('future'), data);
+  renderFlights($('flight-strip'), data);
   renderNews($('news-list'), data);
   renderFooter($('footer'), data);
   updateSync(data);
@@ -46,41 +49,44 @@ function updateSync(data: SiteData): void {
   el.title = data.sources.map((s) => `${s.name}: ${s.ok ? 'ok' : (s.note ?? 'failed')}`).join('\n');
 }
 
-function renderStatic(data: SiteData): void {
-  renderMilestones($('milestone-arc'), data);
-  renderVehicle($('vehicle-view'), $('engine-view'));
-  renderFleet($('fleet-view'), data);
-  renderStarbase($('starbase-view'), data);
-}
-
 function showError(error: unknown): void {
   console.error(error);
-  $('hero').innerHTML = `<h1 class="hero__title" id="hero-title">Starship</h1>
-    <p class="hero__plan">The flight data did not load. Check your connection and reload the page.</p>`;
+  $('hero').innerHTML = `<div class="hero__copy"><h1 class="display" id="hero-title">Starship</h1>
+    <p class="lede">The flight data did not load. Check your connection and reload the page.</p></div>`;
   root.classList.add('is-ready');
 }
 
-/* Scroll: dim the scene under the content, pull the camera back, mark the current section. */
-function setupScroll(onProgress: (p: number) => void): void {
+/* ---------- Navigation ---------- */
+
+function setupNav(): void {
+  const header = document.querySelector<HTMLElement>('.topbar')!;
+  const toggle = header.querySelector<HTMLButtonElement>('.menu')!;
+  const setOpen = (open: boolean) => {
+    root.classList.toggle('nav-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  };
+  toggle.addEventListener('click', () => setOpen(!root.classList.contains('nav-open')));
+  header.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('.nav a')) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root.classList.contains('nav-open')) {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+
   let ticking = false;
   const update = () => {
     ticking = false;
-    const vh = window.innerHeight;
-    const p = Math.min(window.scrollY / vh, 1.6);
-    root.style.setProperty('--scroll', Math.min(Math.max((window.scrollY - vh * 0.35) / (vh * 0.75), 0), 1).toFixed(3));
     root.classList.toggle('is-scrolled', window.scrollY > 40);
-    onProgress(p);
   };
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(update);
-      }
-    },
-    { passive: true },
-  );
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }, { passive: true });
   update();
 
   const links = [...document.querySelectorAll<HTMLAnchorElement>('.nav a')];
@@ -88,68 +94,126 @@ function setupScroll(onProgress: (p: number) => void): void {
     (entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
-        links.forEach((a) => a.setAttribute('aria-current', String(a.hash === `#${entry.target.id}`)));
+        links.forEach((a) => (a.hash === `#${entry.target.id}` ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
       }
     },
-    { rootMargin: '-45% 0px -50% 0px' },
+    { rootMargin: '-50% 0px -50% 0px' },
   );
   document.querySelectorAll('main > section[id]').forEach((s) => observer.observe(s));
 }
 
+/* ---------- Flight sheet and deep links ---------- */
+
+function flightFromHash(): number | null {
+  const m = location.hash.match(/^#flight-(\d+)$/);
+  return m ? Number(m[1]) : null;
+}
+
 function setupLinks(): void {
+  setupSheet(() => {
+    if (flightFromHash() !== null) history.replaceState(null, '', location.pathname + location.search);
+  });
   document.addEventListener('click', (e) => {
     const link = (e.target as Element).closest<HTMLElement>('[data-open-flight]');
     if (!link) return;
     e.preventDefault();
-    openFlight(Number(link.dataset.openFlight));
-    history.replaceState(null, '', `#flight-${link.dataset.openFlight}`);
+    const n = Number(link.dataset.openFlight);
+    if (openFlight(n)) history.replaceState(null, '', `#flight-${n}`);
   });
-  // Deep links straight to a flight open it.
-  const m = location.hash.match(/^#flight-(\d+)$/);
-  if (m) requestAnimationFrame(() => openFlight(Number(m[1])));
+  window.addEventListener('hashchange', () => {
+    const n = flightFromHash();
+    if (n !== null) openFlight(n);
+  });
 }
 
-/* Brushed-steel sheen on the hero title follows the pointer. */
-function setupSheen(): void {
-  if (reducedMotion) return;
-  window.addEventListener(
-    'pointermove',
-    (e) => root.style.setProperty('--sheen', `${(20 + (e.clientX / window.innerWidth) * 60).toFixed(1)}%`),
-    { passive: true },
-  );
-}
+/* ---------- The 3D scene: loaded near the end of the story, running only while on screen ---------- */
 
 function webglAvailable(): boolean {
   try {
-    const c = document.createElement('canvas');
-    return Boolean(c.getContext('webgl2'));
+    return Boolean(document.createElement('canvas').getContext('webgl2'));
   } catch {
     return false;
   }
 }
 
-async function startScene(): Promise<((p: number) => void) | null> {
-  if (params.has('noscene') || !webglAvailable()) return null;
-  const { createHeroScene } = await import('./scene/index.ts');
-  const scene = createHeroScene($<HTMLCanvasElement>('scene'), {
-    reducedMotion,
-    dayTexture: 'textures/earth-day.jpg',
-    auxTexture: 'textures/earth-aux.jpg',
-    lightsTexture: 'textures/earth-lights.jpg',
-    onFirstFrame: () => root.classList.add('is-scene-ready'),
-  });
-  return (p) => scene.setScroll(p);
+function setupScene(story: StoryHandle): void {
+  const future = $('future');
+  if (params.has('noscene') || !webglAvailable()) {
+    root.classList.add('no-scene');
+    return;
+  }
+
+  let scene: HeroScene | null = null;
+  let loading = false;
+  let futureVisible = false;
+
+  const progress = () => {
+    const rect = future.getBoundingClientRect();
+    const travel = Math.max(rect.height - window.innerHeight, 1);
+    return Math.min(Math.max(-rect.top / travel, 0), 1);
+  };
+
+  const sync = () => {
+    const on = story.renderActive || futureVisible;
+    root.classList.toggle('scene-on', on);
+    scene?.setActive(on);
+    if (on) scene?.setScroll(progress());
+  };
+
+  const load = async () => {
+    if (loading) return;
+    loading = true;
+    try {
+      const { createHeroScene } = await import('./scene/index.ts');
+      scene = createHeroScene($<HTMLCanvasElement>('scene'), {
+        reducedMotion,
+        dayTexture: 'textures/earth-day.jpg',
+        auxTexture: 'textures/earth-aux.jpg',
+        lightsTexture: 'textures/earth-lights.jpg',
+        onFirstFrame: () => root.classList.add('is-scene-ready'),
+      });
+      sync();
+    } catch (err) {
+      console.warn('3D scene unavailable', err);
+      root.classList.add('no-scene');
+    }
+  };
+
+  // Start loading three.js about two screens before the render is needed.
+  const near = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        near.disconnect();
+        void load();
+      }
+    },
+    { rootMargin: '200% 0px 200% 0px' },
+  );
+  const renderChapter = document.querySelector(`[data-chapter="${story.renderIndex}"]`);
+  near.observe(renderChapter ?? future);
+  near.observe(future);
+
+  new IntersectionObserver((entries) => {
+    for (const entry of entries) futureVisible = entry.isIntersecting;
+    sync();
+  }).observe(future);
+
+  window.addEventListener('scroll', () => {
+    if (futureVisible) scene?.setScroll(progress());
+  }, { passive: true });
+
+  syncScene = sync;
 }
 
+let syncScene = () => {};
+
+/* ---------- Start ---------- */
+
 async function main(): Promise<void> {
+  root.classList.toggle('reduced-motion', reducedMotion);
+  setupNav();
   setupLinks();
-  setupSheen();
-  let sceneScroll: ((p: number) => void) | null = null;
-  setupScroll((p) => sceneScroll?.(p));
-  const scenePromise = startScene().catch((err: unknown) => {
-    console.warn('3D scene unavailable', err);
-    return null;
-  });
+  setupStrip($('flight-strip'), [...document.querySelectorAll<HTMLButtonElement>('[data-strip]')]);
 
   let data: SiteData;
   try {
@@ -158,12 +222,18 @@ async function main(): Promise<void> {
     showError(error);
     return;
   }
-  renderDynamic(data);
-  renderStatic(data);
-  requestAnimationFrame(() => root.classList.add('is-ready'));
 
-  sceneScroll = await scenePromise;
-  sceneScroll?.(Math.min(window.scrollY / window.innerHeight, 1.6));
+  renderDynamic(data);
+  const story = renderStory($('story'), data, () => syncScene());
+  renderVehicle($('vehicle-view'), $('engine-view'));
+  renderFleet($('fleet-view'), data);
+  renderStarbase($('starbase'), data);
+  setupScene(story);
+  requestAnimationFrame(() => root.classList.add('is-ready'));
+  countUp($('hero'), reducedMotion);
+
+  const deepLink = flightFromHash();
+  if (deepLink !== null) openFlight(deepLink);
 
   // The site rebuilds itself every 30 minutes; an open tab picks up new data without a reload.
   window.setInterval(async () => {
@@ -172,7 +242,6 @@ async function main(): Promise<void> {
       if (fresh.generatedAt !== data.generatedAt) {
         data = fresh;
         renderDynamic(data);
-        root.classList.add('is-ready');
       } else {
         updateSync(data);
       }

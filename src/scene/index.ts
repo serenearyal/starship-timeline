@@ -40,6 +40,8 @@ export interface HeroSceneOptions {
 
 export interface HeroScene {
   setScroll(progress: number): void;
+  /** Runs the render loop only while the scene is on screen. The sunrise starts on the first activation. */
+  setActive(active: boolean): void;
   dispose(): void;
 }
 
@@ -124,6 +126,26 @@ function loadTexture(loader: TextureLoader, url: string): Promise<Texture> {
   return new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
 }
 
+/** Median time between animation frames, measured over a short idle sample. */
+function measureFrameInterval(samples = 24): Promise<number> {
+  return new Promise((resolve) => {
+    const times: number[] = [];
+    const step = (t: number) => {
+      times.push(t);
+      if (times.length <= samples) {
+        requestAnimationFrame(step);
+        return;
+      }
+      const gaps = times
+        .slice(1)
+        .map((x, i) => x - times[i]!)
+        .sort((a, b) => a - b);
+      resolve(gaps[Math.floor(gaps.length / 2)]!);
+    };
+    requestAnimationFrame(step);
+  });
+}
+
 export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOptions): HeroScene {
   const quality = detectQuality();
   const renderer = new WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', alpha: false });
@@ -191,10 +213,16 @@ export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOpt
   let disposed = false;
   let raf = 0;
   let firstFrame = true;
+  let active = false;
+  let activated = false;
   let lastEnv = -Infinity;
   let elapsed = options.reducedMotion ? SUNRISE_SECONDS : 0;
   let lastTime = performance.now();
   const frameTimes: number[] = [];
+  // The browser may cap the frame rate (Chrome's energy saver runs pages at 30 fps). Measure the
+  // interval before the scene runs, so a capped display is not taken for a slow GPU.
+  let frameInterval = 1000 / 60;
+  void measureFrameInterval().then((ms) => (frameInterval = ms));
 
   function resize() {
     width = window.innerWidth;
@@ -258,7 +286,7 @@ export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOpt
     camera.lookAt(tmpTarget.addScaledVector(lookOffset, 0.3));
     camera.updateProjectionMatrix();
 
-    sky.uniforms.uStarIntensity.value = 0.5;
+    sky.uniforms.uStarIntensity.value = 0.34;
     post.lens.uniforms.uTime!.value = elapsed;
   }
 
@@ -267,8 +295,8 @@ export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOpt
     if (frameTimes.length < 90) return;
     const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
     frameTimes.length = 0;
-    // Below about 50 fps, trade a little sharpness for smooth motion.
-    if (avg > 19 && pixelRatio > quality.minPixelRatio) {
+    // When frames take clearly longer than the display allows, trade a little sharpness for smooth motion.
+    if (avg > Math.max(19, frameInterval * 1.2) && pixelRatio > quality.minPixelRatio) {
       pixelRatio = Math.max(quality.minPixelRatio, pixelRatio * 0.85);
       resize();
     }
@@ -292,7 +320,7 @@ export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOpt
     } else {
       adaptQuality(dtMs);
     }
-    if (!options.reducedMotion) raf = requestAnimationFrame(frame);
+    if (active && !options.reducedMotion) raf = requestAnimationFrame(frame);
   }
 
   function renderOnce() {
@@ -307,7 +335,7 @@ export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOpt
   function onVisibility() {
     if (document.hidden) {
       cancelAnimationFrame(raf);
-    } else {
+    } else if (active) {
       lastTime = performance.now();
       renderOnce();
     }
@@ -370,6 +398,18 @@ export function createHeroScene(canvas: HTMLCanvasElement, options: HeroSceneOpt
         scroll = progress;
         renderOnce();
       }
+    },
+    setActive(on: boolean) {
+      if (on === active) return;
+      active = on;
+      if (!on) {
+        cancelAnimationFrame(raf);
+        return;
+      }
+      if (!activated && !options.reducedMotion) elapsed = 0;
+      activated = true;
+      lastTime = performance.now();
+      renderOnce();
     },
     dispose() {
       disposed = true;
