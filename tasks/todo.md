@@ -88,3 +88,6 @@ Launch Library 2 already gives a high-resolution SpaceX photo (CC BY-NC 2.0) for
 - Found in QA: this Chrome runs pages at 30 fps (energy saver). The adaptive quality took that for a slow GPU and lowered the resolution. It now measures the browser's frame interval first and lowers the resolution only when frames are slower than that.
 - Launch Library reuses one image for Flights 7, 8, 9 and 11, and the next flight reuses the Flight 13 image. Only the oldest flight shows a shared photo.
 - The Starhopper photo is only 1120 px wide, so it is soft at full screen.
+- Cron (2026-10-28): no scheduled run started in the first 4 hours after the repository was created (8 slots missed), with the workflow active, on `main`, valid cron and GitHub Actions operational.
+A manual run (`gh workflow run deploy.yml`) passed: LL2 and SNAPI ok, 17 photos from cache, deployed.
+GitHub is known to start schedules on new repositories late; a 12-hour watch is open.

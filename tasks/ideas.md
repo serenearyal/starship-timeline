@@ -23,3 +23,11 @@ The fades use CSS scroll-driven animations (`animation-timeline: view()`), now i
 Effort: small (extract `src/ui/story.ts` and its CSS, take the chapters as JSON).
 Links: https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline/view
 Status: proposed.
+
+## 2026-10-28 - External trigger as a backup for the GitHub cron
+GitHub can start scheduled runs hours late or skip them, most of all on new repositories.
+A free external scheduler (cron-job.org) or a Cloudflare Worker cron can call the `workflow_dispatch` API every 30 minutes with a fine-grained token limited to Actions on this repository, so updates do not depend on GitHub's scheduler.
+A small hosted "reliable cron for GitHub Actions" with run-delay alerts is a possible product; several people ask for it in the GitHub community forum.
+Effort: small (one token, one scheduler entry; the workflow already accepts `workflow_dispatch`).
+Links: https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event, https://github.com/orgs/community/discussions/201738
+Status: proposed, needs a fine-grained token and a scheduler account from the user.
