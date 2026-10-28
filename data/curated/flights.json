@@ -1,0 +1,264 @@
+[
+  {
+    "_sources": "SpaceX flight recaps (spacex.com/launches), Wikipedia 'List of Starship launches', SpacePolicyOnline, Spaceflight Now. Checked 2026-10-27.",
+    "number": 1,
+    "summary": "Several Raptors failed on ascent. The stack tumbled near 39 km and the flight termination system destroyed it before stage separation.",
+    "highlights": ["First integrated flight of Starship and Super Heavy"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-test" }],
+    "booster": {
+      "serial": "B7",
+      "outcome": "lost",
+      "outcomeText": "Engine failures; destroyed before stage separation.",
+      "phases": { "liftoff": "done", "staging": "lost", "boostback": "skipped", "landing": "skipped", "recovery": "skipped" }
+    },
+    "ship": {
+      "serial": "S24",
+      "outcome": "lost",
+      "outcomeText": "Never separated from the booster.",
+      "phases": { "ascent": "lost", "space": "skipped", "deploy": "skipped", "relight": "skipped", "reentry": "skipped", "landing": "skipped" }
+    }
+  },
+  {
+    "number": 2,
+    "summary": "Hot staging worked on the first try after a full 33-engine burn. The booster broke up at the start of boostback, and the ship was lost just before engine cutoff after reaching space.",
+    "highlights": ["First hot staging", "First full-duration 33-engine ascent", "First Starship to reach space"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-2" }],
+    "booster": {
+      "serial": "B9",
+      "outcome": "lost",
+      "outcomeText": "Broke up at the start of the boostback burn.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "lost", "landing": "skipped", "recovery": "skipped" }
+    },
+    "ship": {
+      "serial": "S25",
+      "outcome": "lost",
+      "outcomeText": "Lost just before engine cutoff, after reaching space.",
+      "phases": { "ascent": "lost", "space": "skipped", "deploy": "skipped", "relight": "skipped", "reentry": "skipped", "landing": "skipped" }
+    }
+  },
+  {
+    "number": 3,
+    "summary": "The ship reached its planned trajectory for the first time, opened its payload door and moved propellant between tanks in space. It was lost during reentry; the booster was lost at its landing burn.",
+    "highlights": ["First full-duration ship burn", "Payload door opened in space", "Propellant transfer test between tanks", "First reentry from space"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-3" }],
+    "booster": {
+      "serial": "B10",
+      "outcome": "lost",
+      "outcomeText": "Broke up during the landing burn, about 460 m above the Gulf.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "lost", "recovery": "skipped" }
+    },
+    "ship": {
+      "serial": "S28",
+      "outcome": "lost",
+      "outcomeText": "Roll control trouble skipped the relight; lost during reentry over the Indian Ocean.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "skipped", "relight": "skipped", "reentry": "lost", "landing": "skipped" }
+    }
+  },
+  {
+    "number": 4,
+    "summary": "Both stages made controlled splashdowns. The ship survived reentry even as plasma burned through a forward flap.",
+    "highlights": ["First soft splashdown of both stages", "First ship to survive reentry"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-4" }],
+    "booster": {
+      "serial": "B11",
+      "outcome": "splashdown",
+      "outcomeText": "Soft splashdown in the Gulf of Mexico.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S29",
+      "outcome": "splashdown",
+      "outcomeText": "Survived reentry with heavy flap damage and splashed down in the Indian Ocean.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "skipped", "relight": "skipped", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 5,
+    "summary": "The launch tower caught the Super Heavy booster with its chopstick arms on the first attempt, and the ship splashed down on target in the Indian Ocean.",
+    "highlights": ["First booster catch by the tower"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-5" }],
+    "booster": {
+      "serial": "B12",
+      "outcome": "caught",
+      "outcomeText": "Caught by the launch tower's chopsticks.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S30",
+      "outcome": "splashdown",
+      "outcomeText": "Splashed down on target in the Indian Ocean.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "skipped", "relight": "skipped", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 6,
+    "summary": "Automated tower checks called off the catch, so the booster diverted to the Gulf. The ship relit a Raptor in space and splashed down in daylight.",
+    "highlights": ["First in-space Raptor relight", "First ship splashdown in daylight", "Last flight of a V1 ship"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-6" }],
+    "booster": {
+      "serial": "B13",
+      "outcome": "splashdown",
+      "outcomeText": "Catch aborted by tower health checks; soft splashdown in the Gulf.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S31",
+      "outcome": "splashdown",
+      "outcomeText": "Splashed down in the Indian Ocean.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "skipped", "relight": "done", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 7,
+    "summary": "The tower caught the booster again. A propellant leak started fires in the first V2 ship's aft section, and it was lost before engine cutoff; debris fell near the Turks and Caicos Islands.",
+    "highlights": ["First V2 ship", "Second booster catch"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-7" }],
+    "booster": {
+      "serial": "B14",
+      "outcome": "caught",
+      "outcomeText": "Caught by the tower.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S33",
+      "outcome": "lost",
+      "outcomeText": "Lost about 8.5 minutes into flight after an aft-section fire.",
+      "phases": { "ascent": "lost", "space": "skipped", "deploy": "skipped", "relight": "skipped", "reentry": "skipped", "landing": "skipped" }
+    }
+  },
+  {
+    "number": 8,
+    "summary": "A third booster catch. Late in its burn the ship lost several engines to an energetic event in the aft section and broke up; debris fell near the Bahamas.",
+    "highlights": ["Third booster catch"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-8" }],
+    "booster": {
+      "serial": "B15",
+      "outcome": "caught",
+      "outcomeText": "Caught by the tower.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S34",
+      "outcome": "lost",
+      "outcomeText": "Lost about 9.5 minutes into flight after losing several engines.",
+      "phases": { "ascent": "lost", "space": "skipped", "deploy": "skipped", "relight": "skipped", "reentry": "skipped", "landing": "skipped" }
+    }
+  },
+  {
+    "number": 9,
+    "summary": "B14 became the first booster to fly twice, then broke up during an experimental descent. The ship reached space, but its payload door stuck and a leak cost it attitude control before reentry.",
+    "highlights": ["First booster reflight"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-9" }],
+    "booster": {
+      "serial": "B14",
+      "outcome": "lost",
+      "outcomeText": "Broke up at the start of its landing burn after a high angle-of-attack descent test.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "lost", "recovery": "skipped" }
+    },
+    "ship": {
+      "serial": "S35",
+      "outcome": "lost",
+      "outcomeText": "Payload door did not open; lost attitude control and broke up during reentry.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "lost", "relight": "skipped", "reentry": "lost", "landing": "skipped" }
+    }
+  },
+  {
+    "number": 10,
+    "summary": "Every major objective was met. The ship deployed eight Starlink simulators, relit a Raptor and splashed down on target despite damage to its aft skirt.",
+    "highlights": ["First payload deployment: 8 Starlink simulators", "All major objectives met"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-10" }],
+    "booster": {
+      "serial": "B16",
+      "outcome": "splashdown",
+      "outcomeText": "Tested an engine-out landing burn and hovered over the Gulf before splashdown.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S37",
+      "outcome": "splashdown",
+      "outcomeText": "Splashed down on target in the Indian Ocean.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "done", "relight": "done", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 11,
+    "summary": "A clean repeat of Flight 10 that closed out the V2 era: eight simulators deployed, a Raptor relit, a banking turn like future returns to Starbase, and an on-target splashdown.",
+    "highlights": ["Last V2 flight", "Last launch from Starbase Pad 1", "Dynamic banking maneuver before splashdown"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-11" }],
+    "booster": {
+      "serial": "B15",
+      "outcome": "splashdown",
+      "outcomeText": "Flew the V3-style landing burn and splashed down in the Gulf.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S38",
+      "outcome": "splashdown",
+      "outcomeText": "Splashed down on target in the Indian Ocean.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "done", "relight": "done", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 12,
+    "summary": "Starship V3 debuted from Pad 2. The ship finished its mission even after losing a vacuum Raptor, but engine failures after staging sent B19 into the Gulf and triggered an FAA mishap investigation.",
+    "highlights": ["First flight of Starship V3 and Raptor 3", "First launch from Starbase Pad 2", "Two working Starlinks imaged the ship's heat shield"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-12" }],
+    "booster": {
+      "serial": "B19",
+      "outcome": "lost",
+      "outcomeText": "Engine failures cut the boostback short; hard impact in the Gulf.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "lost", "landing": "lost", "recovery": "skipped" }
+    },
+    "ship": {
+      "serial": "S39",
+      "outcome": "splashdown",
+      "outcomeText": "Landed on two engines in the Indian Ocean, then tipped over and exploded.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "done", "relight": "skipped", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 13,
+    "summary": "The ship flew a clean mission, deployed 20 Starlink V3 satellites and survived splashdown intact. It was towed to Christmas Island and shipped back to Starbase, arriving in October. B20 hit the Gulf hard after a partial landing burn.",
+    "highlights": ["First Starlink V3 satellites deployed", "First ship intact after splashdown", "First ship recovered and returned to Starbase"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-13" }],
+    "booster": {
+      "serial": "B20",
+      "outcome": "lost",
+      "outcomeText": "Only some engines lit for the landing burn; hard impact in the Gulf.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "lost", "recovery": "skipped" }
+    },
+    "ship": {
+      "serial": "S40",
+      "outcome": "recovered",
+      "outcomeText": "Splashed down intact, was towed to Christmas Island and shipped back to Starbase.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "done", "relight": "done", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "number": 14,
+    "summary": "Starship reached orbit for the first time and deployed 26 Starlink V3 satellites. A vacuum Raptor shut down early, so SpaceX cut the planned six orbits short and brought the ship down north of Hawaii after about three hours.",
+    "highlights": ["First orbital flight", "First operational payload: 26 Starlink V3 satellites", "First deorbit burn"],
+    "links": [{ "label": "SpaceX recap", "url": "https://www.spacex.com/launches/starship-flight-14" }],
+    "booster": {
+      "serial": "B21",
+      "outcome": "splashdown",
+      "outcomeText": "Soft splashdown in the Gulf, followed by a planned flight-termination test.",
+      "phases": { "liftoff": "done", "staging": "done", "boostback": "done", "landing": "done", "recovery": "done" }
+    },
+    "ship": {
+      "serial": "S41",
+      "outcome": "splashdown",
+      "outcomeText": "Splashed down north of Hawaii after about three hours, then tipped over and exploded.",
+      "phases": { "ascent": "done", "space": "done", "deploy": "done", "relight": "done", "reentry": "done", "landing": "done" }
+    }
+  },
+  {
+    "_note": "Reported plan as of 2026-10-27 (Ars Technica, NASASpaceflight, SpaceX Q3 call). Dropped automatically once the flight has flown.",
+    "number": 15,
+    "onlyWhileUpcoming": true,
+    "summary": "SpaceX plans to bring both stages home and catch them at the Pad 2 tower: the first ship catch and the first V3 booster catch.",
+    "highlights": ["First ship catch attempt", "First V3 booster catch attempt"],
+    "booster": { "serial": "B22" },
+    "ship": { "serial": "S42" }
+  }
+]

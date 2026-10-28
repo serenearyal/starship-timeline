@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Starship Flight Log</title>
+    <meta
+      name="description"
+      content="Every SpaceX Starship flight, the next launch, the hardware and the news. Updated automatically every 30 minutes."
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Starship Flight Log" />
+    <meta
+      property="og:description"
+      content="Every SpaceX Starship flight, the next launch, the hardware and the news. Updated automatically."
+    />
+    <meta property="og:image" content="https://serenearyal.github.io/starship-timeline/og.jpg" />
+    <meta property="og:url" content="https://serenearyal.github.io/starship-timeline/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="data/starship.json" as="fetch" crossorigin />
+  </head>
+  <body>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <a class="skip" href="#flights">Skip to flights</a>
+
+    <header class="topbar">
+      <a class="wordmark" href="#top" aria-label="Starship Flight Log, back to top">
+        <span class="wordmark__name">Starship</span>
+        <span class="wordmark__sub">Flight log</span>
+      </a>
+      <nav class="nav" aria-label="Sections">
+        <a href="#flights">Flights</a>
+        <a href="#milestones">Milestones</a>
+        <a href="#vehicle">Vehicle</a>
+        <a href="#fleet">Fleet</a>
+        <a href="#starbase">Starbase</a>
+        <a href="#news">News</a>
+      </nav>
+      <p class="sync" id="sync" aria-live="polite"><span class="sync__dot"></span><span class="sync__text">Loading data</span></p>
+    </header>
+
+    <main id="top">
+      <section class="hero" id="next" aria-labelledby="hero-title">
+        <div class="hero__copy" id="hero"></div>
+        <aside class="hero__latest" id="latest" aria-label="Latest flight"></aside>
+      </section>
+
+      <section class="section" id="flights" aria-labelledby="flights-title">
+        <header class="section__head">
+          <h2 id="flights-title">Flight tests</h2>
+          <p class="section__lede">
+            Each dot is one phase of the flight, read left to right like the SpaceX webcast strip. Select a flight for
+            the full story.
+          </p>
+          <ul class="legend" aria-label="Legend">
+            <li><span class="dot dot--done"></span>Done</li>
+            <li><span class="dot dot--lost"></span>Failed or lost here</li>
+            <li><span class="dot dot--skipped"></span>Not reached or not tried</li>
+            <li><span class="dot dot--pending"></span>Planned</li>
+          </ul>
+        </header>
+        <div class="flights" id="flight-list"></div>
+      </section>
+
+      <section class="section" id="milestones" aria-labelledby="milestones-title">
+        <header class="section__head">
+          <h2 id="milestones-title">Milestones</h2>
+          <p class="section__lede">From a water-tower-shaped hopper in 2019 to orbit in 2026, and what comes next.</p>
+        </header>
+        <div class="arc" id="milestone-arc"></div>
+      </section>
+
+      <section class="section" id="vehicle" aria-labelledby="vehicle-title">
+        <header class="section__head">
+          <h2 id="vehicle-title">The vehicle</h2>
+          <p class="section__lede">Four versions of the stack, drawn to scale. Select one to see what changed.</p>
+        </header>
+        <div class="vehicle" id="vehicle-view"></div>
+        <div class="engines" id="engine-view"></div>
+      </section>
+
+      <section class="section" id="fleet" aria-labelledby="fleet-title">
+        <header class="section__head">
+          <h2 id="fleet-title">Fleet</h2>
+          <p class="section__lede">Every orbital-era booster and ship, and where each one ended up.</p>
+        </header>
+        <div class="fleet" id="fleet-view"></div>
+      </section>
+
+      <section class="section" id="starbase" aria-labelledby="starbase-title">
+        <header class="section__head">
+          <h2 id="starbase-title">Starbase now</h2>
+          <p class="section__lede">Conditions, tests, road closures and live cameras at the launch site in South Texas.</p>
+        </header>
+        <div class="starbase" id="starbase-view"></div>
+      </section>
+
+      <section class="section" id="news" aria-labelledby="news-title">
+        <header class="section__head">
+          <h2 id="news-title">News</h2>
+          <p class="section__lede">The latest Starship coverage from across the space press.</p>
+        </header>
+        <ol class="news" id="news-list"></ol>
+      </section>
+    </main>
+
+    <footer class="footer" id="footer"></footer>
+
+    <noscript><p class="noscript">This site needs JavaScript to load the latest Starship data.</p></noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
