@@ -31,7 +31,7 @@ It refreshes itself every 30 minutes from public APIs through GitHub Actions, wi
 - [x] Curated content from research
 - [x] Visual QA loop in Chrome (desktop + mobile, reduced motion, no console errors)
 - [x] Performance pass (adaptive quality, pause when hidden)
-- [ ] GitHub repo, Pages, first deploy, verify cron run
+- [x] GitHub repo, Pages, first deploy, verify cron run
 - [x] Social preview image (`public/og.jpg`)
 - [x] README
 
@@ -52,7 +52,7 @@ Visual QA found and fixed:
 
 CI found: the LL2 detailed launch list timed out twice at 20 s in the first run, with no log line. The timeout is now 60 s and each retry logs.
 
-Open: confirm the first scheduled (cron) run.
+The first scheduled run passed on 2026-10-28 (see Review (v2)).
 
 # v2 - cinematic redesign
 
@@ -79,7 +79,7 @@ Launch Library 2 already gives a high-resolution SpaceX photo (CC BY-NC 2.0) for
 - [x] New type system: Archivo 800 at 112% width, uppercase headlines; sentence-case body
 - [x] Hero, story, future (3D), flight strip + sheet, vehicle, Starbase, news
 - [x] Motion: push-in, scroll-linked crossfades, count-up numbers; reduced motion respected
-- [ ] Visual QA desktop + phone, performance, deploy, verify cron
+- [x] Visual QA desktop + phone, performance, deploy, verify cron
 
 ## Review (v2)
 
@@ -90,4 +90,6 @@ Launch Library 2 already gives a high-resolution SpaceX photo (CC BY-NC 2.0) for
 - The Starhopper photo is only 1120 px wide, so it is soft at full screen.
 - Cron (2026-10-28): no scheduled run started in the first 4 hours after the repository was created (8 slots missed), with the workflow active, on `main`, valid cron and GitHub Actions operational.
 A manual run (`gh workflow run deploy.yml`) passed: LL2 and SNAPI ok, 17 photos from cache, deployed.
-GitHub is known to start schedules on new repositories late; a 12-hour watch is open.
+GitHub is known to start schedules on new repositories late.
+The first scheduled run started at 09:58 UTC, about 7 hours after the repository was created and 21 minutes after its 09:37 slot.
+Build, keepalive and deploy passed: LL2 and SNAPI ok, 17 photos from cache, live data from 09:59 UTC.
